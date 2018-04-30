@@ -20,7 +20,7 @@ extension CircularSlider {
      - parameter context:       the context
      
      */
-    internal static func drawArc(withArc arc: Arc, lineWidth: CGFloat = 2, mode: CGPathDrawingMode = .fillStroke, inContext context: CGContext) {
+    internal static func drawArc(withArc arc: Arc, lineWidth: CGFloat = 2, mode: CGPathDrawingMode = .fillStroke, clockwise: Bool = false, inContext context: CGContext) {
         
         let circle = arc.circle
         let origin = circle.origin
@@ -30,7 +30,8 @@ extension CircularSlider {
         
         context.setLineWidth(lineWidth)
         context.setLineCap(CGLineCap.round)
-        context.addArc(center: origin, radius: circle.radius, startAngle: arc.startAngle, endAngle: arc.endAngle, clockwise: false)
+        
+        context.addArc(center: origin, radius: circle.radius, startAngle: arc.startAngle, endAngle: arc.endAngle, clockwise: clockwise)
         context.move(to: CGPoint(x: origin.x, y: origin.y))
         context.drawPath(using: mode)
         
@@ -71,7 +72,7 @@ extension CircularSlider {
         CircularSlider.drawArc(withArc: sliderArc, lineWidth: backtrackLineWidth, inContext: context)
     }
 
-    /// draw Filled arc between start an end angles
+    /// draw Filled arc between start and end angles
     internal func drawFilledArc(fromAngle startAngle: CGFloat, toAngle endAngle: CGFloat, inContext context: CGContext) {
         diskFillColor.setFill()
         trackFillColor.setStroke()
@@ -81,6 +82,7 @@ extension CircularSlider {
         
         // fill Arc
         CircularSlider.drawDisk(withArc: arc, inContext: context)
+        
         // stroke Arc
         CircularSlider.drawArc(withArc: arc, lineWidth: lineWidth, mode: .stroke, inContext: context)
     }

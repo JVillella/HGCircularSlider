@@ -179,7 +179,7 @@ internal class CircularSliderHelper {
         let sourceRange = (source.max - source.min) / CGFloat(source.rounds)
         let destinationRange = (destination.max - destination.min) / CGFloat(destination.rounds)
         let scaledValue = source.min + (value - source.min).truncatingRemainder(dividingBy: sourceRange)
-        let newValue =  (((scaledValue - source.min) * destinationRange) / sourceRange) + destination.min
+        let newValue = (((scaledValue - source.min) * destinationRange) / sourceRange) + destination.min
         
         return  newValue
     }
@@ -199,10 +199,10 @@ internal class CircularSliderHelper {
      - returns: the angle value
      */
     internal static func scaleToAngle(value aValue: CGFloat, inInterval oldInterval: Interval) -> CGFloat {
-        let angleInterval = Interval(min: circleMinValue , max: circleMaxValue)
-        
+        let angleInterval = Interval(min: circleMinValue, max: circleMaxValue)
         let angle = scaleValue(aValue, fromInterval: oldInterval, toInterval: angleInterval)
-        return  angle
+
+        return angle + CGFloat.pi
     }
     
     /**
@@ -237,16 +237,15 @@ internal class CircularSliderHelper {
      * Length (angular) of a shortest way between two angles.
      * It will be in range [-π/2, π/2], where sign means dir (+ for clockwise, - for counter clockwise).
      */
-    private static  func angle(from alpha: CGFloat, to beta: CGFloat) -> CGFloat {
-        let halfValue = circleMaxValue/2
+    private static func angle(from alpha: CGFloat, to beta: CGFloat) -> CGFloat {
+        let halfValue = circleMaxValue / 2
         // Rotate right
         let offset = alpha >= halfValue ? circleMaxValue - alpha : -alpha
         let offsetBeta = beta + offset
 
         if offsetBeta > halfValue {
             return offsetBeta - circleMaxValue
-        }
-        else {
+        } else {
             return offsetBeta
         }
     }
