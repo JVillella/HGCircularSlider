@@ -29,7 +29,7 @@ open class RangeCircularSlider: CircularSlider {
     }
 
     // MARK: Changing the Slider’s Appearance
-    
+
     /**
      * The color used to tint start thumb
      * Ignored if the startThumbImage != nil
@@ -38,7 +38,7 @@ open class RangeCircularSlider: CircularSlider {
      */
     @IBInspectable
     open var startThumbTintColor: UIColor = UIColor.groupTableViewBackground
-    
+
     /**
      * The color used to tint the stroke of the start thumb
      * Ignored if the startThumbImage != nil
@@ -47,15 +47,15 @@ open class RangeCircularSlider: CircularSlider {
      */
     @IBInspectable
     open var startThumbStrokeColor: UIColor = UIColor.green
-    
+
     /**
      * The stroke highlighted color of start thumb
      * The default value of this property is blue color
      */
     @IBInspectable
     open var startThumbStrokeHighlightedColor: UIColor = UIColor.purple
-    
-    
+
+
     /**
      * The image of the end thumb
      * Clears any custom color you may have provided for end thumb.
@@ -63,10 +63,10 @@ open class RangeCircularSlider: CircularSlider {
      * The default value of this property is nil
      */
     open var startThumbImage: UIImage?
-    
-    
+
+
     // MARK: Accessing the Slider’s Value Limits
-    
+
     /**
      * The minimum value of the receiver.
      *
@@ -81,7 +81,7 @@ open class RangeCircularSlider: CircularSlider {
             }
         }
     }
-    
+
     /**
      * The maximum value of the receiver.
      *
@@ -97,7 +97,7 @@ open class RangeCircularSlider: CircularSlider {
             }
         }
     }
-    
+
     /**
     * The fixed distance between the start value and the end value
     *
@@ -114,8 +114,8 @@ open class RangeCircularSlider: CircularSlider {
             endPointValue = startPointValue + distance
         }
     }
-    
-    
+
+
     /**
      * The value in the start thumb.
      *
@@ -127,19 +127,19 @@ open class RangeCircularSlider: CircularSlider {
     open var startPointValue: CGFloat = 0.0 {
         didSet {
             guard oldValue != startPointValue else { return }
-            
+
             if startPointValue < minimumValue {
                 startPointValue = minimumValue
             }
-            
+
             if distance > 0 {
                 endPointValue = startPointValue + distance
             }
-            
+
             setNeedsDisplay()
         }
     }
-    
+
     /**
      * The value in the end thumb.
      *
@@ -149,7 +149,7 @@ open class RangeCircularSlider: CircularSlider {
      * The default value of this property is 0.5
      */
     override open var endPointValue: CGFloat {
-        didSet {            
+        didSet {
             if oldValue == endPointValue && distance <= 0 {
                 return
             }
@@ -161,41 +161,45 @@ open class RangeCircularSlider: CircularSlider {
             if distance > 0 {
                 startPointValue = endPointValue - distance
             }
-            
+
             setNeedsDisplay()
         }
     }
-    
+
     // MARK: private properties / methods
-    
+
     /**
      * The center of the start thumb
      * Used to know in which thumb is the user gesture
      */
     fileprivate var startThumbCenter: CGPoint = CGPoint.zero
-    
+
     /**
      * The center of the end thumb
      * Used to know in which thumb is the user gesture
      */
     fileprivate var endThumbCenter: CGPoint = CGPoint.zero
-    
+
     /**
      * The last touched thumb
      * By default the value is none
      */
     fileprivate var selectedThumb: SelectedThumb = .none
-    
+
+    public var startThumbIsHidden: Bool = false {
+        didSet { setNeedsDisplay() }
+    }
+
     /**
      Checks if the touched point affect the thumb
-     
+
      The point affect the thumb if :
      The thumb rect contains this point
      Or the angle between the touched point and the center of the thumb less than 15°
-     
+
      - parameter thumbCenter: the center of the thumb
      - parameter touchPoint:  the touched point
-     
+
      - returns: true if the touched point affect the thumb, false if not.
      */
     internal func isThumb(withCenter thumbCenter: CGPoint, containsPoint touchPoint: CGPoint) -> Bool {
@@ -204,31 +208,31 @@ open class RangeCircularSlider: CircularSlider {
         if rect.contains(touchPoint) {
             return true
         }
-        
+
         let angle = CircularSliderHelper.angle(betweenFirstPoint: thumbCenter, secondPoint: touchPoint, inCircleWithCenter: bounds.center)
         let degree =  CircularSliderHelper.degrees(fromRadians: angle)
-        
+
         // tolerance 15°
         let isInside = degree < 15 || degree > 345
         return isInside
     }
-    
+
     // MARK: Drawing
-    
+
     /**
      See superclass documentation
      */
     override open func draw(_ rect: CGRect) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
-        
+
         drawCircularSlider(inContext: context)
-        
+
         let interval = Interval(min: minimumValue, max: maximumValue, rounds: numberOfRounds)
         // get start angle from start value
         let startAngle = CircularSliderHelper.scaleToAngle(value: startPointValue, inInterval: interval) + CircularSliderHelper.circleInitialAngle
         // get end angle from end value
         var endAngle = CircularSliderHelper.scaleToAngle(value: endPointValue, inInterval: interval) + CircularSliderHelper.circleInitialAngle
-        
+
         let sameAngles = abs(startAngle - endAngle) < CGFloat.ulpOfOne
         let atInitialAngles = !(abs(startPointValue - maximumValue) < CGFloat.ulpOfOne && endPointValue < CGFloat.ulpOfOne)
         if sameAngles && atInitialAngles {
@@ -237,27 +241,35 @@ open class RangeCircularSlider: CircularSlider {
 
         drawShadowArc(fromAngle: startAngle, toAngle: endAngle, inContext: context)
         drawFilledArc(fromAngle: startAngle, toAngle: endAngle, inContext: context)
-        
+
         // end thumb
         endThumbTintColor.setFill()
-        (isHighlighted == true && selectedThumb == .endThumb) ? endThumbStrokeHighlightedColor.setStroke() : endThumbStrokeColor.setStroke()
+        (isHighlighted == true && selectedThumb == .endThumb)
+            ? endThumbStrokeHighlightedColor.setStroke()
+            : endThumbStrokeColor.setStroke()
         endThumbCenter = drawThumb(withAngle: endAngle, inContext: context)
         if let image = endThumbImage {
             endThumbCenter = drawThumb(withImage: image, angle: endAngle, inContext: context)
         }
-        
-        // start thumb
-        startThumbTintColor.setFill()
-        (isHighlighted == true && selectedThumb == .startThumb) ? startThumbStrokeHighlightedColor.setStroke() : startThumbStrokeColor.setStroke()
 
-        startThumbCenter = drawThumb(withAngle: startAngle, inContext: context)
-        if let image = startThumbImage {
-            startThumbCenter = drawThumb(withImage: image, angle: startAngle, inContext: context)
+        // start thumb
+        if !self.startThumbIsHidden {
+            startThumbTintColor.setFill()
+            (isHighlighted == true && selectedThumb == .startThumb)
+                ? startThumbStrokeHighlightedColor.setStroke()
+                : startThumbStrokeColor.setStroke()
+
+            startThumbCenter = drawThumb(withAngle: startAngle, inContext: context)
+            if let image = startThumbImage {
+                startThumbCenter = drawThumb(withImage: image, angle: startAngle, inContext: context)
+            }
+        } else {
+            startThumbCenter = CGPoint.zero
         }
     }
-    
+
     // MARK: User interaction methods
-    
+
     /**
      See superclass documentation
      */
@@ -269,7 +281,7 @@ open class RangeCircularSlider: CircularSlider {
 
         return selectedThumb != .none
     }
-    
+
     /**
      See superclass documentation
      */
@@ -281,10 +293,10 @@ open class RangeCircularSlider: CircularSlider {
         // the position of the pan gesture
         let touchPosition = touch.location(in: self)
         let startPoint = CGPoint(x: bounds.center.x, y: 0)
-        
+
         let oldValue: CGFloat = selectedThumb.isStart ? startPointValue : endPointValue
         let value = newValue(from: oldValue, touch: touchPosition, start: startPoint)
-        
+
         if selectedThumb.isStart {
             startPointValue = value
             if (maximumValue - startPointValue) + endPointValue > maximumValue {
@@ -297,7 +309,7 @@ open class RangeCircularSlider: CircularSlider {
             }
         }
         sendActions(for: .valueChanged)
-        
+
         return true
     }
 
@@ -307,6 +319,10 @@ open class RangeCircularSlider: CircularSlider {
 
     // MARK: - Helpers
     open func thumb(for touchPosition: CGPoint) -> SelectedThumb {
+        if self.startThumbIsHidden {
+            return .endThumb
+        }
+
         if isThumb(withCenter: startThumbCenter, containsPoint: touchPosition) {
             return .startThumb
         } else if isThumb(withCenter: endThumbCenter, containsPoint: touchPosition) {
